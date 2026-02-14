@@ -1,0 +1,87 @@
+import math
+
+# 1. CONFIGURATION
+ROLE_CONFIGS = {
+    "junior":     {"w": 0.50, "x": 0.30, "y": 0.10, "z": 0.10}, 
+    "executive":  {"w": 0.10, "x": 0.20, "y": 0.50, "z": 0.20}, 
+    "specialist": {"w": 0.30, "x": 0.10, "y": 0.10, "z": 0.50} 
+}
+
+def calculate_score(s, t, i, r, weights):
+    return (max(0.01, s)**weights['w']) * \
+           (max(0.01, t)**weights['x']) * \
+           (max(0.01, i)**weights['y']) * \
+           (max(0.01, r)**weights['z'])
+
+def self_resolve_ambiguity(score, s, t, i, r, exp_years, role_type):
+    # EXECUTIVE SPECIFIC RULE
+    if role_type == "executive" and exp_years < 5:
+        return False, "Executive Reject: Insufficient leadership tenure (< 5 years)."
+
+    # Rule A: Transferable Expert
+    if r < 0.4 and s > 0.9:
+        return True, "Rule A: High technical mastery compensates for industry mismatch."
+    
+    # Rule B: High Potential
+    if exp_years < 2 and t > 0.9:
+        return True, "Rule B: High Potential (Top Trajectory compensates for low Exp)."
+    
+    # Rule C: Stagnant Specialist
+    if (t < 0.3 or i < 0.3) and exp_years > 8:
+        return False, "Rule C: Stagnant growth despite high tenure."
+
+    return score > 0.65, "Standard Threshold."
+
+def get_user_input():
+    print("\n--- RESUME VERDICT SYSTEM ---")
+    print("Please enter the parsed metrics (0.0 to 1.0):")
+    
+    try:
+        s = float(input("Enter Skills (S): "))
+        t = float(input("Enter Trajectory (T): "))
+        i = float(input("Enter Impact (I): "))
+        r = float(input("Enter Relevance (R): "))
+        exp = int(input("Enter Years of Experience: "))
+        
+        print("\nAvailable Roles: junior, executive, specialist")
+        role = input("Enter the role to evaluate: ").lower().strip()
+        
+        if role not in ROLE_CONFIGS:
+            print("❌ Invalid role. Defaulting to 'junior'.")
+            role = "junior"
+            
+        return {'S': s, 'T': t, 'I': i, 'R': r, 'exp_years': exp}, role
+    except ValueError:
+        print("❌ Invalid input. Please enter numbers for scores and integers for experience.")
+        return None, None
+
+def main():
+    data, role_type = get_user_input()
+    
+    if data:
+        weights = ROLE_CONFIGS[role_type]
+        s, t, i, r = data['S'], data['T'], data['I'], data['R']
+        exp = data['exp_years']
+        
+        # Phase 2: Base Score
+        base_score = calculate_score(s, t, i, r, weights)
+        
+        # Phase 3: Decision Logic
+        if base_score > 0.75:
+            decision, reason = True, "Strong Match: Metrics exceed hiring threshold."
+        elif base_score < 0.45:
+            decision, reason = False, f"Low Match: Missing core {role_type} requirements."
+        else:
+            # Resolve the 'Maybe'
+            decision, reason = self_resolve_ambiguity(base_score, s, t, i, r, exp, role_type)
+        
+        print("\n" + "="*40)
+        print(f"VERDICT: {'✅ INTERVIEW' if decision else '❌ REJECT'}")
+        print(f"Role: {role_type.upper()}")
+        print(f"Score: {base_score:.2%}")
+        print(f"Reason: {reason}")
+        print("="*40)
+
+# Run the program
+if __name__ == "__main__":
+    main()
