@@ -1,0 +1,54 @@
+import os
+import json
+import time
+import PyPDF2
+from google import genai
+
+# --- 1. CONFIGURATION ---
+# Use gemini-2.5-flash for high-speed PDF analysis
+client = genai.Client(
+    api_key="AIzaSyBnhWPjHwUXM0UGYfMkaq3yMnghctY7xYA",
+    http_options={'api_version': 'v1'} # Switching to stable v1 to avoid v1beta 404s
+)
+
+# --- 2. THE AI EXTRACTION ---
+def extract_and_normalize(pdf_path):
+    try:
+        with open(pdf_path, 'rb') as f:
+            reader = PyPDF2.PdfReader(f)
+            text = " ".join([p.extract_text() for p in reader.pages])
+
+        # Updated model: gemini-2.5-flash
+        model_name = "gemini-2.5-flash" 
+        
+        prompt = f"""
+        Analyze this resume and provide scores (0.0 to 1.0) for:
+        S (Skills), T (Trajectory), I (Impact), R (Relevance), and exp_years (integer).
+        Return ONLY valid JSON: {{"S": 0.0, "T": 0.0, "I": 0.0, "R": 0.0, "exp_years": 0}}
+        Text: {text[:8000]} 
+        """
+
+        response = client.models.generate_content(model=model_name, contents=prompt)
+        
+        # Robust JSON parsing
+        raw_text = response.text.strip()
+        if "```json" in raw_text:
+            raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+        
+        return json.loads(raw_text)
+                    
+    except Exception as e:
+        print(f"Critical Error: {e}")
+        return None
+
+# --- 3. EXECUTION ---
+# Path to your file
+file_to_process = "[VRIDHI CV] - Vridhi JhunJhunWala.pdf"
+
+if os.path.exists(file_to_process):
+    result_metrics = extract_and_normalize(file_to_process)
+    if result_metrics:
+        print(f"Successfully Parsed: {result_metrics}")
+else:
+    print(f"File not found. Please check the name: {file_to_process}")
+
