@@ -1,8 +1,14 @@
 # Resume_filter
 A workflow proposed to filter resumes , in order to select the best candidates to be interviewed.
+
+
 Proposed by :Saima Muzaffar Hussain(M.E CSE) & Atifa Raheel(M.E CS)
 
 Proposed workflow:
+
+
+
+
 <img width="1250" height="1125" alt="image" src="https://github.com/user-attachments/assets/466c644c-5a9e-4e10-870d-b4d1369e9eb8" />
 
 This project automates the transition from unstructured resume text to a definitive hiring verdict. It uses a three-phase pipeline to quantify candidate potential through Geometric Mean Scoring and Rule-Based Arbitration.
