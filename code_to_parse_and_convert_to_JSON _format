@@ -7,7 +7,7 @@ from google import genai
 # --- 1. CONFIGURATION ---
 # Use gemini-2.5-flash for high-speed PDF analysis
 client = genai.Client(
-    api_key="AIzaSyBnhWPjHwUXM0UGYfMkaq3yMnghctY7xYA",
+    api_key="",
     http_options={'api_version': 'v1'} # Switching to stable v1 to avoid v1beta 404s
 )
 
